@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/SyncDb.iml" filepath="$PROJECT_DIR$/SyncDb.iml" />
+      <module fileurl="file://$PROJECT_DIR$/javaDb.iml" filepath="$PROJECT_DIR$/javaDb.iml" />
     </modules>
   </component>
 </project>
