@@ -6,12 +6,12 @@ import java.util.Vector;
 /**
  * @author David
  */
-public class jtablemodel extends AbstractTableModel {
+public class jTableModel extends AbstractTableModel {
 
     Vector<Vector<String>> table;
     Vector<String> colName;
 
-    public jtablemodel(Vector<String> daColName,Vector<Vector<String>> dbTable){
+    jTableModel(Vector<String> daColName, Vector<Vector<String>> dbTable){
         colName = daColName;
         table = dbTable;
 

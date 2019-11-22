@@ -12,18 +12,18 @@ public class Database {
 
     private static String url = "jdbc:mysql://localhost:3306/test?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
     private static String url1 = "jdbc:mysql://localhost:3306/test2?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-    private Statement stmt = null;
-    private ResultSet rs = null;
+    Statement stmt = null;
+    ResultSet rs = null;
     public static Vector<Vector<String>> table = null;
     private static ResultSetMetaData RsmetaData = null;
 
     public static void main(String[] args) throws SQLException {
     }
 
-    public Database(String uurl) throws SQLException {
+    public Database(String uUrl) throws SQLException {
         String user = "root";
         String password = "Superzhouqi/15";
-        Connection cd = DriverManager.getConnection(uurl, user, password);
+        Connection cd = DriverManager.getConnection(uUrl, user, password);
         stmt = cd.createStatement();
         Vector<Vector<String>> table = new Vector<>();
     }
