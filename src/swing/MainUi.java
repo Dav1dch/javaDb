@@ -1,36 +1,32 @@
 package swing;
 
-import database.Database;
-
-import javax.swing.*;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import java.awt.*;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.sql.SQLException;
 import java.util.Vector;
 
+import javax.swing.*;
+
+
+import database.Database;
+
 /**
  * @author david
  */
-public class MainUi implements TableModelListener {
-    JTable jTable1, jTable2;
+public class MainUi {
+    private static String prUrl = "jdbc:mysql://localhost:3306/";
+    private static String afUrl = "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+    Database mysql = new Database(prUrl + afUrl);
+
 
     public static void main(String[] args) throws SQLException {
         new MainUi();
     }
 
-    @Override
-    public void tableChanged(TableModelEvent e) {
-        int row = e.getFirstRow();
-        int col = e.getColumn();
-        jTable1.repaint();
-        jTable2.repaint();
-    }
-
     public MainUi() throws SQLException {
-
         JFrame frame = new JFrame("Database");
         GridBagLayout gridBagLayout = new GridBagLayout();
         frame.setSize(800, 600);
@@ -45,65 +41,62 @@ public class MainUi implements TableModelListener {
         gridBagConstraintsRemainder.gridwidth = GridBagConstraints.REMAINDER;
         gridBagConstraintsRemainder.weightx = 1;
         gridBagConstraintsRemainder.insets = new Insets(5, 5, 5, 5);
-        Database db1 = new Database("jdbc:mysql://localhost:3306/test?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true");
-        Database db2 = new Database("jdbc:mysql://localhost:3306/test2?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true");
-        Database selectDatabase = new Database("jdbc:mysql://localhost:3306?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true");
-        JComboBox<String> comboBox1 = buildComboBox(selectDatabase.executeSql("show databases;").toArray());
-        JComboBox<String> comboBox2 = buildComboBox(selectDatabase.executeSql("show databases;").toArray());
-        gridBagLayout.addLayoutComponent(comboBox1, gridBagConstraints);
-        gridBagLayout.addLayoutComponent(comboBox2, gridBagConstraintsRemainder);
-        TableData tableOne = new TableData(db1, "test");
-        TableData tableTwo = new TableData(db2, "table_test2");
-        jTableModel tableModel1 = new jTableModel(tableOne.colName, tableOne.mainData);
-        jTableModel tableModel2 = new jTableModel(tableTwo.colName, tableTwo.mainData);
-        tableModel1.addTableModelListener(this);
-        tableModel2.addTableModelListener(this);
-        jTable1 = new JTable(tableModel1);
-        jTable2 = new JTable(tableModel2);
+        String dbName1 = mysql.executeSql("show databases;").get(0).get(0);
+        String url1 = prUrl + dbName1 + afUrl;
+        ComboBox comboBox1 = new ComboBox(url1);
+        comboBox1.creatDatabaseBox(mysql);
+        ComboBox comboBox2 = new ComboBox(url1);
+        comboBox2.creatDatabaseBox(mysql);
+        comboBox1.creatTableBox(comboBox1.table.database);
+        comboBox2.creatTableBox(comboBox1.table.database);
+        gridBagLayout.addLayoutComponent(comboBox1.comboBox, gridBagConstraints);
+        gridBagLayout.addLayoutComponent(comboBox2.comboBox, gridBagConstraintsRemainder);
+        boxListener(comboBox1);
+        boxListener(comboBox2);
+        gridBagLayout.addLayoutComponent(comboBox1.comboBox2, gridBagConstraints);
+        gridBagLayout.addLayoutComponent(comboBox2.comboBox2, gridBagConstraintsRemainder);
         gridBagConstraints.weighty = 1;
         gridBagConstraintsRemainder.weighty = 1;
-        gridBagLayout.addLayoutComponent(jTable1, gridBagConstraints);
-        gridBagLayout.addLayoutComponent(jTable2, gridBagConstraintsRemainder);
-        panel.add(comboBox1);
-        panel.add(comboBox2);
-        panel.add(jTable1);
-        panel.add(jTable2);
+        gridBagLayout.addLayoutComponent(comboBox1.table.table, gridBagConstraints);
+        gridBagLayout.addLayoutComponent(comboBox2.table.table, gridBagConstraintsRemainder);
+        panel.add(comboBox1.comboBox);
+        panel.add(comboBox2.comboBox);
+        panel.add(comboBox1.comboBox2);
+        panel.add(comboBox2.comboBox2);
+        panel.add(comboBox1.table.table);
+        panel.add(comboBox2.table.table);
         frame.setContentPane(panel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
     }
 
-    private JComboBox<String> buildComboBox(Object[] nameList) {
-        DefaultComboBoxModel<String> comboBoxModel = new DefaultComboBoxModel<>();
-        for (Object name :
-                nameList) {
-            String substring = name.toString().substring(1, name.toString().length() - 1);
-            comboBoxModel.addElement(substring);
-        }
-        JComboBox<String> comboBox = new JComboBox<>(comboBoxModel);
-        comboBox.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange() == ItemEvent.SELECTED) {
-                    // 选择的下拉框选项
-                    System.out.println(e.toString());
-                    System.out.println(e.getItem());
+    public void boxListener(ComboBox comboBox) {
+        comboBox.comboBox.addItemListener(e -> {
+            System.out.println("first");
+            if (comboBox.table != null) {
+                String dbName1 = e.getItem().toString();
+                String url1 = prUrl + dbName1 + afUrl;
+                System.out.println("second");
+                try {
+                    comboBox.table.database = new Database(url1);
+                    Vector<Vector<String>> res = comboBox.table.database.executeSql("show tables");
+                    String[] resSet = new String[res.size()];
+                    for (int i = 0; i < res.size(); i++) {
+                        resSet[i] = res.get(i).get(0);
+                    }
+                    comboBox.comboBox2.setModel(new DefaultComboBoxModel(resSet));
+                    comboBox.table.tableData = new TableData(comboBox.table.database, resSet[0]);
+                    comboBox.table.tableModel = new jTableModel(comboBox.table.tableData.colName, comboBox.table.tableData.mainData);
+                    comboBox.table.table.setModel(comboBox.table.tableModel);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
                 }
+            } else {
+
             }
         });
-        return new JComboBox<String>(comboBoxModel);
     }
-
-    static class TableData {
-        Vector<Vector<String>> mainData;
-        Vector<String> colName;
-
-        TableData(Database dbTable, String tableName) throws SQLException {
-            mainData = dbTable.executeSql("select * from " + tableName);
-            colName = dbTable.getColoumName();
-
-        }
-    }
-
 
 }
+
+
