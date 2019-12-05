@@ -1,102 +1,238 @@
 package swing;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Vector;
 
 import javax.swing.*;
 
-
-import database.Database;
-
 /**
  * @author david
  */
-public class MainUi {
-    private static String prUrl = "jdbc:mysql://localhost:3306/";
-    private static String afUrl = "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-    Database mysql = new Database(prUrl + afUrl);
-
+public class MainUi implements ActionListener {
+    Table table1;
+    Table table2;
+    JPanel checkBoxPanel = new JPanel();
+    JPanel panel;
+    GridBagLayout gridBagLayout;
+    ArrayList<String> commonList = new ArrayList<>();
+    ArrayList<JCheckBox> boxes = new ArrayList<>();
 
     public static void main(String[] args) throws SQLException {
         new MainUi();
     }
 
     public MainUi() throws SQLException {
+        table1 = new Table(this);
+        table2 = new Table(this);
+        table1.setFlag(1);
+        table2.setFlag(0);
+        tableListener();
+
         JFrame frame = new JFrame("Database");
-        GridBagLayout gridBagLayout = new GridBagLayout();
-        frame.setSize(800, 600);
+        gridBagLayout = new GridBagLayout();
+        frame.setSize(1024, 1024);
         frame.setLocationRelativeTo(null);
-        JPanel panel = new JPanel(gridBagLayout);
+        panel = new JPanel(gridBagLayout);
         GridBagConstraints gridBagConstraints = new GridBagConstraints();
+        GridBagConstraints gridBagConstraintsRemainder = new GridBagConstraints();
+        JLabel label1 = new JLabel("数据库1");
+        JLabel label2 = new JLabel("数据库2");
+        JLabel label3 = new JLabel("选择需要同步的共有字段");
+        JLabel label4 = new JLabel("数据库1");
+        JLabel label5 = new JLabel("数据库2");
+        JButton button1 = new JButton("增加");
+        JButton button2 = new JButton("删除");
+        button1.addActionListener(this);
+        button2.addActionListener(this);
         gridBagConstraints.fill = GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 1;
         gridBagConstraints.insets = new Insets(5, 5, 5, 5);
-        GridBagConstraints gridBagConstraintsRemainder = new GridBagConstraints();
         gridBagConstraintsRemainder.fill = GridBagConstraints.BOTH;
         gridBagConstraintsRemainder.gridwidth = GridBagConstraints.REMAINDER;
         gridBagConstraintsRemainder.weightx = 1;
         gridBagConstraintsRemainder.insets = new Insets(5, 5, 5, 5);
-        String dbName1 = mysql.executeSql("show databases;").get(0).get(0);
-        String url1 = prUrl + dbName1 + afUrl;
-        ComboBox comboBox1 = new ComboBox(url1);
-        comboBox1.creatDatabaseBox(mysql);
-        ComboBox comboBox2 = new ComboBox(url1);
-        comboBox2.creatDatabaseBox(mysql);
-        comboBox1.creatTableBox(comboBox1.table.database);
-        comboBox2.creatTableBox(comboBox1.table.database);
-        gridBagLayout.addLayoutComponent(comboBox1.comboBox, gridBagConstraints);
-        gridBagLayout.addLayoutComponent(comboBox2.comboBox, gridBagConstraintsRemainder);
-        boxListener(comboBox1);
-        boxListener(comboBox2);
-        gridBagLayout.addLayoutComponent(comboBox1.comboBox2, gridBagConstraints);
-        gridBagLayout.addLayoutComponent(comboBox2.comboBox2, gridBagConstraintsRemainder);
+        creatCheckBoxes();
+        gridBagLayout.addLayoutComponent(label2, gridBagConstraintsRemainder);
+        gridBagLayout.addLayoutComponent(label1, gridBagConstraints);
+        gridBagLayout.addLayoutComponent(label3, gridBagConstraints);
+        gridBagLayout.addLayoutComponent(label5, gridBagConstraintsRemainder);
+        gridBagLayout.addLayoutComponent(label4, gridBagConstraints);
+        gridBagLayout.addLayoutComponent(button1, gridBagConstraintsRemainder);
+        gridBagLayout.addLayoutComponent(button2, gridBagConstraintsRemainder);
+        gridBagLayout.addLayoutComponent(checkBoxPanel, gridBagConstraintsRemainder);
+        gridBagLayout.addLayoutComponent(table1.comboBox.comboBox, gridBagConstraints);
+        gridBagLayout.addLayoutComponent(table2.comboBox.comboBox, gridBagConstraintsRemainder);
+        boxListener(table1);
+        boxListener(table2);
+        gridBagLayout.addLayoutComponent(table1.comboBox.comboBox2, gridBagConstraints);
+        gridBagLayout.addLayoutComponent(table2.comboBox.comboBox2, gridBagConstraintsRemainder);
         gridBagConstraints.weighty = 1;
         gridBagConstraintsRemainder.weighty = 1;
-        gridBagLayout.addLayoutComponent(comboBox1.table.table, gridBagConstraints);
-        gridBagLayout.addLayoutComponent(comboBox2.table.table, gridBagConstraintsRemainder);
-        panel.add(comboBox1.comboBox);
-        panel.add(comboBox2.comboBox);
-        panel.add(comboBox1.comboBox2);
-        panel.add(comboBox2.comboBox2);
-        panel.add(comboBox1.table.table);
-        panel.add(comboBox2.table.table);
+        JScrollPane jScrollPane1 = new JScrollPane(table1.table);
+        JScrollPane jScrollPane2 = new JScrollPane(table2.table);
+        gridBagLayout.addLayoutComponent(jScrollPane1, gridBagConstraints);
+        gridBagLayout.addLayoutComponent(jScrollPane2, gridBagConstraintsRemainder);
+        panel.add(label1);
+        panel.add(label2);
+        panel.add(table1.comboBox.comboBox);
+        panel.add(table2.comboBox.comboBox);
+        panel.add(table1.comboBox.comboBox2);
+        panel.add(table2.comboBox.comboBox2);
+        panel.add(label3);
+        panel.add(checkBoxPanel);
+        panel.add(button1);
+        panel.add(button2);
+        panel.add(label4);
+        panel.add(label5);
+        panel.add(jScrollPane1);
+        panel.add(jScrollPane2);
         frame.setContentPane(panel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
     }
 
-    public void boxListener(ComboBox comboBox) {
-        comboBox.comboBox.addItemListener(e -> {
-            System.out.println("first");
-            if (comboBox.table != null) {
-                String dbName1 = e.getItem().toString();
-                String url1 = prUrl + dbName1 + afUrl;
-                System.out.println("second");
+    private void tableListener() {
+        Action action = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                TableCellListener tcl = (TableCellListener) e.getSource();
+                String pkValue = tcl.getWholeTable().tableModel.getValueAt(tcl.getRow(), 0);
                 try {
-                    comboBox.table.database = new Database(url1);
-                    Vector<Vector<String>> res = comboBox.table.database.executeSql("show tables");
-                    String[] resSet = new String[res.size()];
-                    for (int i = 0; i < res.size(); i++) {
-                        resSet[i] = res.get(i).get(0);
+                    String pk = tcl.getWholeTable().database.getKey(tcl.getWholeTable().tableModel.tableName).get(0).get(0);
+                    ArrayList<String> colList = new ArrayList<>();
+                    Collections.addAll(colList, tcl.getWholeTable().tableModel.colName);
+                    if (colList.indexOf(pk) == tcl.getColumn()) {
+                        tcl.getWholeTable().database.updateData(pk, (String) tcl.getOldValue(), pk, (String) tcl.getNewValue(), tcl.getWholeTable().tableModel.tableName);
+                        syncUpdateDatabase(pkValue, tcl.getWholeTable().flag, (String) tcl.getNewValue(),
+                                tcl.getWholeTable().tableModel.colName[tcl.getColumn()], true, (String) tcl.getOldValue());
+                    } else {
+                        syncUpdateDatabase(pkValue, tcl.getWholeTable().flag, (String) tcl.getNewValue(),
+                                tcl.getWholeTable().tableModel.colName[tcl.getColumn()], false, (String) tcl.getOldValue());
+
                     }
-                    comboBox.comboBox2.setModel(new DefaultComboBoxModel(resSet));
-                    comboBox.table.tableData = new TableData(comboBox.table.database, resSet[0]);
-                    comboBox.table.tableModel = new jTableModel(comboBox.table.tableData.colName, comboBox.table.tableData.mainData);
-                    comboBox.table.table.setModel(comboBox.table.tableModel);
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                 }
-            } else {
+            }
+        };
 
+        TableCellListener tcl = new TableCellListener(table1, action);
+        TableCellListener tcl1 = new TableCellListener(table2, action);
+    }
+
+    private void creatCheckBoxes() {
+        String[] list1 = table1.tableData.getColName();
+        String[] list2 = table2.tableData.getColName();
+        ArrayList<String> tmp = new ArrayList<>();
+        Collections.addAll(tmp, list2);
+        commonList.clear();
+        for (String name :
+                list1) {
+            if (tmp.contains(name)) {
+                commonList.add(name);
+            }
+        }
+        boxes.clear();
+        checkBoxPanel.removeAll();
+        for (int i = 0; i < commonList.size(); i++) {
+            boxes.add(new JCheckBox(commonList.get(i)));
+            checkBoxPanel.add(boxes.get(i));
+        }
+        checkBoxPanel.repaint();
+        checkBoxPanel.revalidate();
+
+    }
+
+    public void syncUpdateDatabase(String pkValue, int dbFlag, String target, String colName, boolean b, String oldValue) throws SQLException {
+        String tableName1 = table1.tableModel.tableName;
+        String tableName2 = table2.tableModel.tableName;
+        String pk1 = table1.database.getKey(tableName1).get(0).get(0);
+        String pk2 = table2.database.getKey(tableName2).get(0).get(0);
+        if (b) {
+            pkValue = oldValue;
+        }
+        if (pk1.equals(pk2)) {
+            if (commonList.contains(colName)) {
+                if (boxes.get(commonList.indexOf(colName)).isSelected()) {
+                    table1.database.updateData(pk1, pkValue, colName, target, tableName1);
+                    table2.database.updateData(pk2, pkValue, colName, target, tableName2);
+                    table1.tableData = new TableData(table1.database, tableName1);
+                    table1.tableModel = new JTableModel(table1.tableData, table1.database, this,
+                            table1.flag);
+                    table2.tableData = new TableData(table2.database, tableName2);
+                    table2.tableModel = new JTableModel(table2.tableData, table2.database, this,
+                            table2.flag);
+                    table1.table.setModel(table1.tableModel);
+                    table2.table.setModel(table2.tableModel);
+                } else if (dbFlag == 1) {
+                    table1.database.updateData(pk1, pkValue, colName, target, tableName1);
+                    table1.tableData = new TableData(table1.database, tableName1);
+                    table1.tableModel = new JTableModel(table1.tableData, table1.database, this,
+                            table1.flag);
+                    table1.table.setModel(table1.tableModel);
+                } else if (dbFlag == 0) {
+                    table2.database.updateData(pk2, pkValue, colName, target, tableName2);
+                    table2.tableData = new TableData(table2.database, tableName2);
+                    table2.tableModel = new JTableModel(table2.tableData, table2.database, this,
+                            table2.flag);
+                    table2.table.setModel(table2.tableModel);
+                }
+            }
+        }
+
+
+    }
+
+    public void boxListener(Table table) {
+        table.comboBox.comboBox.addItemListener(e -> {
+            String dbName1 = e.getItem().toString();
+            try {
+                table.database.useDatabase(dbName1);
+                Vector<Vector<String>> res = table.database.showTables();
+                String[] resSet = new String[res.size()];
+                for (int i = 0; i < res.size(); i++) {
+                    resSet[i] = res.get(i).get(0);
+                }
+                table.comboBox.comboBox2.setModel(new DefaultComboBoxModel<>(resSet));
+                table.tableData = new TableData(table.database, resSet[0]);
+                table.tableModel = new JTableModel(table.tableData, table.database, this,
+                        table.flag);
+                table.table.setModel(table.tableModel);
+                creatCheckBoxes();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        });
+        table.comboBox.comboBox2.addItemListener(e -> {
+            try {
+                table.tableData = new TableData(table.database, e.getItem().toString());
+                table.tableModel = new JTableModel(table.tableData, table.database, this,
+                        table.flag);
+                table.table.setModel(table.tableModel);
+                creatCheckBoxes();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
             }
         });
     }
 
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        switch (e.getActionCommand()){
+            case "增加":
+                addFrame frame = new addFrame(table1, table2, this);
+                break;
+            case "删除":
+                break;
+            default:
+                return;
+        }
+    }
 }
 
 

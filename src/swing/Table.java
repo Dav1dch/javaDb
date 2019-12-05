@@ -3,39 +3,37 @@ package swing;
 import database.Database;
 
 import javax.swing.*;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import javax.swing.table.TableModel;
 import java.sql.SQLException;
 
 /**
  * @author dav1d
  */
-public class Table implements TableModelListener {
+public class Table {
     JTable table;
     Database database;
-    TableModel tableModel;
+    JTableModel tableModel;
     TableData tableData;
+    ComboBox comboBox;
+    private static String prUrl = "jdbc:mysql://localhost:3306/";
+    private static String afUrl = "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+    MainUi main;
+    int flag;
 
-    public Table(Database db) throws SQLException {
-        this.table = new JTable();
-        this.database = db;
-        this.tableData = new TableData(this.database, this.database.executeSql("show tables").get(0).get(0));
-        this.tableModel = new jTableModel(this.tableData.colName, this.tableData.mainData);
-
+    public Table(MainUi main) throws SQLException {
+        this.main = main;
+        database = new Database(prUrl + afUrl);
+        comboBox = new ComboBox(main, database);
+        String tmp = database.showDaetabases().get(0).get(0);
+        database = new Database(prUrl + tmp + afUrl);
+        this.tableData = new TableData(this.database, this.database.showTables().get(0).get(0));
+        this.tableModel = new JTableModel(this.tableData, database, main, flag);
+        this.table = new JTable(tableModel);
     }
 
-    public void creatTable(String tableName) throws SQLException {
-        this.tableData = new TableData(this.database, tableName);
-        this.tableModel = new jTableModel(this.tableData.colName, this.tableData.mainData);
-        this.tableModel.addTableModelListener(this);
-        this.table = new JTable(this.tableModel);
+    public void setFlag(int f){
+        flag = f;
+        tableModel.flag = f;
+        comboBox.setFlag(f);
     }
 
-    @Override
-    public void tableChanged(TableModelEvent e) {
-        int row = e.getFirstRow();
-        int col = e.getColumn();
-        table.repaint();
-    }
 }

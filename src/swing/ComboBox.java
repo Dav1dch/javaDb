@@ -3,8 +3,6 @@ package swing;
 import database.Database;
 
 import javax.swing.*;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.sql.SQLException;
 import java.util.Vector;
 
@@ -14,28 +12,31 @@ import java.util.Vector;
 public class ComboBox {
     JComboBox<String> comboBox;
     JComboBox<String> comboBox2;
-    Table table;
     Database database;
-    private static String prUrl = "jdbc:mysql://localhost:3306/";
-    private static String afUrl = "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+    MainUi main;
+    int flag;
 
-    public ComboBox(String url) throws SQLException {
-        database = new Database(url);
+    public ComboBox(MainUi mainUi,Database database) throws SQLException {
+        this.main = mainUi;
+        this.database = database;
         creatDatabaseBox(database);
-        String tableName = database.executeSql("show tables").get(0).get(0);
-        comboBox = new JComboBox<>();
-        table = new Table(database);
+        String dbName = database.showDaetabases().get(0).get(0);
+        database.useDatabase(dbName);
         creatTableBox(database);
 
     }
 
+    public void setFlag(int f){
+        flag = f;
+    }
+
 
     public void creatTableBox(Database db) throws SQLException {
-        this.comboBox2 = buildComboBox(db.executeSql("show tables;"));
+        this.comboBox2 = buildComboBox(db.showTables());
     }
 
     public void creatDatabaseBox(Database db) throws SQLException {
-        this.comboBox = buildComboBox(db.executeSql("show databases;"));
+        this.comboBox = buildComboBox(db.showDaetabases());
     }
 
     public JComboBox<String> buildComboBox(Vector<Vector<String>> nameList) {

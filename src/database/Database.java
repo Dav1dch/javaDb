@@ -14,10 +14,9 @@ public class Database {
     private static String url1 = "jdbc:mysql://localhost:3306/test2?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
     Statement stmt = null;
     ResultSet rs = null;
-    public static Vector<Vector<String>> table = null;
     private static ResultSetMetaData RsmetaData = null;
 
-    public static void main(String[] args) throws SQLException {
+    public static void main(String[] args) {
     }
 
     public Database(String uUrl) throws SQLException {
@@ -28,7 +27,7 @@ public class Database {
         Vector<Vector<String>> table = new Vector<>();
     }
 
-    public  Vector<Vector<String>> executeSql(String sql) throws SQLException {
+    public  Vector<Vector<String>> executeQuerySql(String sql) throws SQLException {
         try {
             rs = stmt.executeQuery(sql);
         } catch (SQLException e) {
@@ -37,7 +36,32 @@ public class Database {
         return resultSetToVector(rs);
     }
 
-    private static Vector<Vector<String>> resultSetToVector(ResultSet rs) throws SQLException {
+    public void executeSql(String sql) throws SQLException {
+        stmt.execute(sql);
+    }
+
+    public void useDatabase(String dbName) throws SQLException {
+        stmt.execute("use " + dbName + ";");
+    }
+
+    public Vector<Vector<String>> showDaetabases() throws SQLException {
+        return this.executeQuerySql("show databases;");
+    }
+
+    public Vector<Vector<String>> showTables() throws SQLException {
+        return this.executeQuerySql("show tables;");
+    }
+
+    public Vector<Vector<String>> selectAll(String tbName) throws SQLException {
+        return this.executeQuerySql("select * from " + tbName + ";");
+    }
+
+    public Vector<Vector<String>> getKey(String tbName) throws SQLException {
+        return this.executeQuerySql("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME='"
+                + tbName + "';");
+    }
+
+    private static Vector<Vector<String>> resultSetToVector(ResultSet rs) {
         Vector<Vector<String>> table = new Vector<>();
         int j = 0;
         try {
@@ -56,7 +80,7 @@ public class Database {
 
     }
 
-    public Vector<String> getColoumName() throws SQLException {
+    public Vector<String> getColumnName() {
         Vector<String> name = new Vector<>();
         try {
             RsmetaData = rs.getMetaData();
@@ -71,4 +95,8 @@ public class Database {
     }
 
 
+    public void updateData(String pk, String pkValue, String colName, String target, String tableName) throws SQLException {
+        this.executeSql("update " + tableName + " set " + colName + " = '" + target + "' where " + pk + " = " + pkValue + ";");
+
+    }
 }
