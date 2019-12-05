@@ -10,8 +10,8 @@ import java.util.Vector;
  * @author dav1d
  */
 public class ComboBox {
-    JComboBox<String> comboBox;
-    JComboBox<String> comboBox2;
+    public JComboBox<String> comboBox;
+    public JComboBox<String> comboBox2;
     Database database;
     MainUi main;
     int flag;

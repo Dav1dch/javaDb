@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.sql.SQLException;
 
 /**
  * @author dav1d
@@ -17,6 +18,7 @@ public class addFrame implements ItemListener, ActionListener {
     JLabel[] labels;
     JTextField[] textFields;
     JPanel textPanel;
+    JComboBox<String> box;
     JScrollPane scrollPane;
     GridBagLayout gridBagLayout = new GridBagLayout();
     GridBagConstraints gridBagConstraints = new GridBagConstraints();
@@ -30,14 +32,14 @@ public class addFrame implements ItemListener, ActionListener {
         this.table2 = table2;
         frame = new JFrame("增加");
         initFrame();
-        frame.pack();
+        frame.setSize(300, 300);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
 
     public void initFrame() {
         String[] list = {"数据库1", "数据库2"};
-        JComboBox<String> box = new JComboBox<>(list);
+        box = new JComboBox<>(list);
         box.addItemListener(this);
         JPanel panel = new JPanel(gridBagLayout);
         textPanel = new JPanel(gridBagLayout);
@@ -75,12 +77,12 @@ public class addFrame implements ItemListener, ActionListener {
     }
 
 
-    public void creatPanel(Table table){
+    public void creatPanel(Table table) {
         size = table.tableData.colName.size();
         labels = new JLabel[size];
         textFields = new JTextField[size];
         textPanel.removeAll();
-        for (int i = 0; i < size; i++){
+        for (int i = 0; i < size; i++) {
             labels[i] = new JLabel(table.tableData.colName.get(i));
             textFields[i] = new JTextField();
             gridBagLayout.addLayoutComponent(labels[i], gridBagConstraints);
@@ -94,12 +96,26 @@ public class addFrame implements ItemListener, ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        for (int i = 0; i < size; i++){
-            if (textFields[i].getText().equals("")){
-                System.out.println("null");
-            }
-            System.out.println(textFields[i].getText());
+        String[] values = new String[size];
+        String[] colNames = new String[size];
+        for (int i = 0; i < size; i++) {
+            values[i] = textFields[i].getText();
+            colNames[i] = labels[i].getText();
         }
+        try {
+
+            if (box.getSelectedItem().toString().equals("数据库1")) {
+                table1.database.insertValue(table1.tableModel.tableName, colNames, values);
+                table1.refresh(table1.tableModel.tableName);
+            } else {
+                table2.database.insertValue(table2.tableModel.tableName, colNames, values);
+                table2.refresh(table2.tableModel.tableName);
+            }
+            main.sync();
+        }catch (SQLException e1){
+            System.err.println(e1);
+        }
+        frame.setVisible(false);
 
     }
 }

@@ -161,26 +161,14 @@ public class MainUi implements ActionListener {
                 if (boxes.get(commonList.indexOf(colName)).isSelected()) {
                     table1.database.updateData(pk1, pkValue, colName, target, tableName1);
                     table2.database.updateData(pk2, pkValue, colName, target, tableName2);
-                    table1.tableData = new TableData(table1.database, tableName1);
-                    table1.tableModel = new JTableModel(table1.tableData, table1.database, this,
-                            table1.flag);
-                    table2.tableData = new TableData(table2.database, tableName2);
-                    table2.tableModel = new JTableModel(table2.tableData, table2.database, this,
-                            table2.flag);
-                    table1.table.setModel(table1.tableModel);
-                    table2.table.setModel(table2.tableModel);
+                    table1.refresh(tableName1);
+                    table2.refresh(tableName2);
                 } else if (dbFlag == 1) {
                     table1.database.updateData(pk1, pkValue, colName, target, tableName1);
-                    table1.tableData = new TableData(table1.database, tableName1);
-                    table1.tableModel = new JTableModel(table1.tableData, table1.database, this,
-                            table1.flag);
-                    table1.table.setModel(table1.tableModel);
+                    table1.refresh(tableName1);
                 } else if (dbFlag == 0) {
                     table2.database.updateData(pk2, pkValue, colName, target, tableName2);
-                    table2.tableData = new TableData(table2.database, tableName2);
-                    table2.tableModel = new JTableModel(table2.tableData, table2.database, this,
-                            table2.flag);
-                    table2.table.setModel(table2.tableModel);
+                    table2.refresh(tableName2);
                 }
             }
         }
@@ -199,10 +187,7 @@ public class MainUi implements ActionListener {
                     resSet[i] = res.get(i).get(0);
                 }
                 table.comboBox.comboBox2.setModel(new DefaultComboBoxModel<>(resSet));
-                table.tableData = new TableData(table.database, resSet[0]);
-                table.tableModel = new JTableModel(table.tableData, table.database, this,
-                        table.flag);
-                table.table.setModel(table.tableModel);
+                table.refresh(resSet[0]);
                 creatCheckBoxes();
             } catch (SQLException ex) {
                 ex.printStackTrace();
@@ -210,10 +195,7 @@ public class MainUi implements ActionListener {
         });
         table.comboBox.comboBox2.addItemListener(e -> {
             try {
-                table.tableData = new TableData(table.database, e.getItem().toString());
-                table.tableModel = new JTableModel(table.tableData, table.database, this,
-                        table.flag);
-                table.table.setModel(table.tableModel);
+                table.refresh(e.getItem().toString());
                 creatCheckBoxes();
             } catch (SQLException ex) {
                 ex.printStackTrace();
@@ -223,14 +205,57 @@ public class MainUi implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        switch (e.getActionCommand()){
+        switch (e.getActionCommand()) {
             case "增加":
-                addFrame frame = new addFrame(table1, table2, this);
+                new addFrame(table1, table2, this);
                 break;
             case "删除":
+                String tableName1 = table1.tableModel.tableName;
+                String tableName2 = table2.tableModel.tableName;
+                int flag = 0;
+                try {
+                    String pk2 = table2.database.getKey(tableName2).get(0).get(0);
+                    String pk1 = table1.database.getKey(tableName1).get(0).get(0);
+                    if (pk1.equals(pk2)){
+                        for (JCheckBox box :
+                                boxes) {
+                            if (box.getText().equals(pk1) && box.isSelected()){
+                                flag = 1;
+                            }
+                        }
+                    }
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+                try {
+                    new delFrame(table1, table2, this, flag);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
                 break;
             default:
                 return;
+        }
+    }
+
+
+    public void sync() throws SQLException {
+        String pk1 = table1.database.getKey(table1.tableModel.tableName).get(0).get(0);
+        String pk2 = table2.database.getKey(table2.tableModel.tableName).get(0).get(0);
+        if (pk1.equals(pk2)) {
+            ArrayList<String> colNames = new ArrayList<>();
+            for (JCheckBox box :
+                    boxes) {
+                if (box.isSelected()) {
+                    colNames.add(box.getText());
+                }
+            }
+            if (colNames.size() > 0) {
+                table2.database.sync(table1, colNames, table2.tableModel.tableName);
+                table1.database.sync(table2, colNames, table1.tableModel.tableName);
+                table1.refresh(table1.tableModel.tableName);
+                table2.refresh(table2.tableModel.tableName);
+            }
         }
     }
 }

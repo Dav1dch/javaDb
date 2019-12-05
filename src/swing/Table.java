@@ -10,10 +10,10 @@ import java.sql.SQLException;
  */
 public class Table {
     JTable table;
-    Database database;
-    JTableModel tableModel;
+    public Database database;
+    public JTableModel tableModel;
     TableData tableData;
-    ComboBox comboBox;
+    public ComboBox comboBox;
     private static String prUrl = "jdbc:mysql://localhost:3306/";
     private static String afUrl = "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
     MainUi main;
@@ -34,6 +34,13 @@ public class Table {
         flag = f;
         tableModel.flag = f;
         comboBox.setFlag(f);
+    }
+
+    public void refresh(String s) throws SQLException {
+        this.tableData = new TableData(this.database, s);
+        this.tableModel = new JTableModel(this.tableData, this.database, this.main,
+                this.flag);
+        this.table.setModel(this.tableModel);
     }
 
 }

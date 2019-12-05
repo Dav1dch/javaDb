@@ -1,6 +1,9 @@
 package database;
 
+import swing.Table;
+
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Vector;
 
 /**
@@ -27,7 +30,7 @@ public class Database {
         Vector<Vector<String>> table = new Vector<>();
     }
 
-    public  Vector<Vector<String>> executeQuerySql(String sql) throws SQLException {
+    public Vector<Vector<String>> executeQuerySql(String sql) throws SQLException {
         try {
             rs = stmt.executeQuery(sql);
         } catch (SQLException e) {
@@ -97,6 +100,53 @@ public class Database {
 
     public void updateData(String pk, String pkValue, String colName, String target, String tableName) throws SQLException {
         this.executeSql("update " + tableName + " set " + colName + " = '" + target + "' where " + pk + " = " + pkValue + ";");
+    }
 
+    public void insertValue(String tableName, String[] colNames, String[] values) throws SQLException {
+        String sql = "insert into " + tableName + " (";
+        for (int i = 0; i < colNames.length; i++) {
+            if (i != colNames.length - 1) {
+                sql += colNames[i] + ", ";
+            } else {
+                sql += colNames[i] + ") ";
+            }
+        }
+        sql += "values (";
+        for (int i = 0; i < values.length; i++) {
+            if (i != values.length - 1) {
+                sql += "'" + values[i] + "', ";
+            } else {
+                sql += "'" + values[i] + "') ";
+            }
+        }
+        sql += ";";
+        this.executeSql(sql);
+    }
+
+
+    public void sync(Table table, ArrayList<String> colNames, String tableName) throws SQLException {
+        String tbName = table.tableModel.tableName;
+        String sql = "update " + tableName + ", " + table.comboBox.comboBox.getSelectedItem().toString() + "." + tbName + " set ";
+        System.out.println(colNames.toString());
+        for (int i = 0; i < colNames.size(); i++) {
+            if (i != colNames.size() - 1) {
+                sql += tableName + "." + colNames.get(i) + "=" + tbName + "." + colNames.get(i) + ",";
+            } else {
+                sql += tableName + "." + colNames.get(i) + "=" + tbName + "." + colNames.get(i);
+            }
+        }
+        sql += " where ";
+        sql += tableName + "." + this.getKey(tableName).get(0).get(0) + "=" + tbName + "."
+                + table.database.getKey(tbName).get(0).get(0) + ";";
+        System.out.println(sql);
+        this.executeSql(sql);
+
+    }
+
+    public void delData(String text, String tableName) throws SQLException {
+        String sql = "delete from " + tableName + " where " + tableName + "." + this.getKey(tableName).get(0).get(0)
+                + "=" + text + ";";
+        System.out.println(sql);
+        this.executeSql(sql);
     }
 }

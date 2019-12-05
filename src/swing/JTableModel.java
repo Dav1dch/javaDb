@@ -14,7 +14,7 @@ public class JTableModel extends DefaultTableModel {
     String[][] table;
     String[] colName;
     Database database;
-    String tableName;
+    public String tableName;
     MainUi main;
     int flag;
 
